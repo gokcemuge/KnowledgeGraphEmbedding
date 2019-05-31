@@ -59,7 +59,7 @@ class KGEModel(nn.Module):
             self.modulus = nn.Parameter(torch.Tensor([[0.5 * self.embedding_range.item()]]))
         
         #Do not forget to modify this line when you add a new model in the "forward" function
-        if model_name not in ['TransE', 'DistMult', 'ComplEx', 'RotatE', 'pRotatE']:
+        if model_name not in ['TransE', 'DistMult', 'ComplEx', 'RotatE', 'pRotatE', 'TransComplEx']:
             raise ValueError('model %s not supported' % model_name)
             
         if model_name == 'RotatE' and (not double_entity_embedding or double_relation_embedding):
@@ -67,6 +67,9 @@ class KGEModel(nn.Module):
 
         if model_name == 'ComplEx' and (not double_entity_embedding or not double_relation_embedding):
             raise ValueError('ComplEx should use --double_entity_embedding and --double_relation_embedding')
+
+        if model_name == 'TransComplEx' and (not double_entity_embedding or not double_relation_embedding):
+            raise ValueError('TransComplEx should use --double_entity_embedding and --double_relation_embedding')
         
     def forward(self, sample, mode='single'):
         '''
@@ -152,7 +155,8 @@ class KGEModel(nn.Module):
             'DistMult': self.DistMult,
             'ComplEx': self.ComplEx,
             'RotatE': self.RotatE,
-            'pRotatE': self.pRotatE
+            'pRotatE': self.pRotatE,
+            'TransComplEx': self.TransComplEx
         }
         
         if self.model_name in model_func:
@@ -195,6 +199,24 @@ class KGEModel(nn.Module):
             score = re_score * re_tail + im_score * im_tail
 
         score = score.sum(dim = 2)
+        return score
+
+    def TransComplEx(self, head, relation, tail, mode):
+        re_head, im_head = torch.chunk(head, 2, dim=2)
+        re_relation, im_relation = torch.chunk(relation, 2, dim=2)
+        re_tail, im_tail = torch.chunk(tail, 2, dim=2)
+
+        if mode == 'head-batch':
+            re_score = re_head + (re_relation - re_tail)
+            im_score = im_head + (im_relation + im_tail)
+        else:
+            re_score = (re_head + re_relation) - re_tail
+            im_score = (im_head + im_relation) + im_tail
+
+        re_score = torch.norm(re_score, p=1, dim=2)
+        im_score = torch.norm(im_score, p=1, dim=2)
+
+        score = self.gamma.item() - re_score - im_score
         return score
 
     def RotatE(self, head, relation, tail, mode):
