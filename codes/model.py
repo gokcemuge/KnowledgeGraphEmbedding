@@ -296,7 +296,7 @@ class KGEModel(nn.Module):
             subsampling_weight = subsampling_weight.cuda()
 
         negative_score = model((positive_sample, negative_sample), mode=mode)
-
+        print("negative_score :" ,negative_score)
         '''check here'''
         # gamma1 for negative samples
         gamma1 = nn.Parameter(
@@ -321,11 +321,14 @@ class KGEModel(nn.Module):
             negative_score = F.relu(-negative_score).mean(dim = 1)
 
         positive_score = model(positive_sample)
-
+        print("positive_score :", positive_score)
         positive_score = positive_score - gamma1.item()
 
         positive_score = F.relu(positive_score).squeeze(dim = 1)
-
+        print("Afterwards")
+        print("negative_score: ", negative_score)
+        print("positive_score: ", positive_score)
+        print("-*---------------------------------*-")
         if args.uni_weight:
             positive_sample_loss = - positive_score.mean()
             negative_sample_loss = - negative_score.mean()
