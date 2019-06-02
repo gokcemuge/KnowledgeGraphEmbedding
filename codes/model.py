@@ -289,6 +289,10 @@ class KGEModel(nn.Module):
 
         positive_sample, negative_sample, subsampling_weight, mode = next(train_iterator)
 
+        print("positive sample", positive_sample)
+        print("negative sample", negative_sample)
+        print("subsampling_weight", subsampling_weight)
+
         if args.cuda:
             positive_sample = positive_sample.cuda()
             negative_sample = negative_sample.cuda()
@@ -329,8 +333,8 @@ class KGEModel(nn.Module):
             positive_sample_loss = - positive_score.mean()
             negative_sample_loss = - negative_score.mean()
         else:
-            positive_sample_loss = - (subsampling_weight * positive_score).sum()/subsampling_weight.sum()
-            negative_sample_loss = - (subsampling_weight * negative_score).sum()/subsampling_weight.sum()
+            positive_sample_loss = (subsampling_weight * positive_score).sum()/subsampling_weight.sum()
+            negative_sample_loss = (subsampling_weight * negative_score).sum()/subsampling_weight.sum()
 
         loss = (positive_sample_loss + negative_sample_loss)/2
         
