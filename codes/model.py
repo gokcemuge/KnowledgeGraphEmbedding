@@ -300,13 +300,13 @@ class KGEModel(nn.Module):
         '''check here'''
         # gamma1 for negative samples
         gamma1 = nn.Parameter(
-            torch.Tensor([24.0]),
+            torch.Tensor([8.0]),
             requires_grad=False
         )
 
         # gamma2 for negative samples
         gamma2 = nn.Parameter(
-            torch.Tensor([38.0]),
+            torch.Tensor([48.0]),
             requires_grad=False
         )
 
