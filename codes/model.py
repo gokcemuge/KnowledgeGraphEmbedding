@@ -296,7 +296,7 @@ class KGEModel(nn.Module):
             subsampling_weight = subsampling_weight.cuda()
 
         negative_score = model((positive_sample, negative_sample), mode=mode)
-        print("negative_score :" ,negative_score)
+        #print("negative_score :" ,negative_score)
         '''check here'''
         # gamma1 for negative samples
         gamma1 = nn.Parameter(
@@ -311,7 +311,7 @@ class KGEModel(nn.Module):
         )
 
         negative_score = gamma2.item() - negative_score
-        print("negative_score after subtracting gamma2: ", negative_score)
+        #print("negative_score after subtracting gamma2: ", negative_score)
         '''check here'''
         if args.negative_adversarial_sampling:
             #In self-adversarial sampling, we do not apply back-propagation on the sampling weight
@@ -321,22 +321,22 @@ class KGEModel(nn.Module):
             negative_score = F.relu(negative_score).mean(dim = 1) #WARNING: minus is deleted
 
         positive_score = model(positive_sample)
-        print("positive_score :", positive_score)
+        #print("positive_score :", positive_score)
         positive_score = positive_score - gamma1.item()
-        print("positive_score after subtracting gamma1: ", positive_score)
+        #print("positive_score after subtracting gamma1: ", positive_score)
         positive_score = F.relu(positive_score).squeeze(dim = 1)
-        print("Afterwards")
-        print("negative_score: ", negative_score)
-        print("positive_score: ", positive_score)
-        print("-*---------------------------------*-")
+        #print("Afterwards")
+        #print("negative_score: ", negative_score)
+        #print("positive_score: ", positive_score)
+        #print("-*---------------------------------*-")
         if args.uni_weight:
             positive_sample_loss = - positive_score.mean()
             negative_sample_loss = - negative_score.mean()
         else:
             positive_sample_loss = (subsampling_weight * positive_score).sum()/subsampling_weight.sum()
-            print("positive_sample_loss: ", positive_sample_loss)
+            #print("positive_sample_loss: ", positive_sample_loss)
             negative_sample_loss = (subsampling_weight * negative_score).sum()/subsampling_weight.sum()
-            print("negative_sample_loss: ", negative_sample_loss)
+            #print("negative_sample_loss: ", negative_sample_loss)
 
         loss = (positive_sample_loss + negative_sample_loss)/2
         
