@@ -311,7 +311,7 @@ class KGEModel(nn.Module):
         )
 
         negative_score = gamma2.item() - negative_score
-
+        print("negative_score after subtracting gamma2: ", negative_score)
         '''check here'''
         if args.negative_adversarial_sampling:
             #In self-adversarial sampling, we do not apply back-propagation on the sampling weight
@@ -323,7 +323,7 @@ class KGEModel(nn.Module):
         positive_score = model(positive_sample)
         print("positive_score :", positive_score)
         positive_score = positive_score - gamma1.item()
-
+        print("positive_score after subtracting gamma1: ", positive_score)
         positive_score = F.relu(positive_score).squeeze(dim = 1)
         print("Afterwards")
         print("negative_score: ", negative_score)
