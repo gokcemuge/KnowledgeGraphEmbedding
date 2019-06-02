@@ -321,7 +321,7 @@ class KGEModel(nn.Module):
 
         positive_score = model(positive_sample)
 
-        positive_score = gamma1.item() - positive_score
+        positive_score = positive_score - gamma1.item()
 
         positive_score = F.relu(positive_score).squeeze(dim = 1)
 
