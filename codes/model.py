@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 from dataloader import TestDataset
 
 class KGEModel(nn.Module):
-    def __init__(self, model_name, nentity, nrelation, hidden_dim, gamma, 
+    def __init__(self, model_name, nentity, nrelation, hidden_dim, gamma,
                  double_entity_embedding=False, double_relation_embedding=False):
         super(KGEModel, self).__init__()
         self.model_name = model_name
@@ -29,12 +29,16 @@ class KGEModel(nn.Module):
         self.epsilon = 2.0
         
         self.gamma = nn.Parameter(
-            torch.Tensor([gamma]), 
+            torch.Tensor([gamma]),
             requires_grad=False
         )
-        
+
+        np.random.seed(5)
+        torch.manual_seed(5)
+
+        '''check here'''
         self.embedding_range = nn.Parameter(
-            torch.Tensor([(self.gamma.item() + self.epsilon) / hidden_dim]), 
+            torch.Tensor([(self.gamma.item() + self.epsilon) / hidden_dim]),
             requires_grad=False
         )
         
@@ -172,7 +176,8 @@ class KGEModel(nn.Module):
         else:
             score = (head + relation) - tail
 
-        score = self.gamma.item() - torch.norm(score, p=1, dim=2)
+        #score = self.gamma.item() - torch.norm(score, p=1, dim=2)
+        score = torch.norm(score, p=1, dim=2)
         return score
 
     def DistMult(self, head, relation, tail, mode):
@@ -216,7 +221,8 @@ class KGEModel(nn.Module):
         re_score = torch.norm(re_score, p=1, dim=2)
         im_score = torch.norm(im_score, p=1, dim=2)
 
-        score = self.gamma.item() - re_score - im_score
+        #score = self.gamma.item() - re_score - im_score
+        score = (re_score + im_score)
         return score
 
     def RotatE(self, head, relation, tail, mode):
@@ -246,7 +252,8 @@ class KGEModel(nn.Module):
         score = torch.stack([re_score, im_score], dim = 0)
         score = score.norm(dim = 0)
 
-        score = self.gamma.item() - score.sum(dim = 2)
+        #score = self.gamma.item() - score.sum(dim = 2)
+        score = score.sum(dim=2)
         return score
 
     def pRotatE(self, head, relation, tail, mode):
@@ -266,7 +273,8 @@ class KGEModel(nn.Module):
         score = torch.sin(score)            
         score = torch.abs(score)
 
-        score = self.gamma.item() - score.sum(dim = 2) * self.modulus
+        #score = self.gamma.item() - score.sum(dim = 2) * self.modulus
+        score = score.sum(dim=2) * self.modulus
         return score
     
     @staticmethod
@@ -288,16 +296,34 @@ class KGEModel(nn.Module):
 
         negative_score = model((positive_sample, negative_sample), mode=mode)
 
+        '''check here'''
+        # gamma1 for negative samples
+        gamma1 = nn.Parameter(
+            torch.Tensor([12.0]),
+            requires_grad=False
+        )
+
+        # gamma2 for negative samples
+        gamma2 = nn.Parameter(
+            torch.Tensor([14.0]),
+            requires_grad=False
+        )
+
+        negative_score = gamma2.item() - negative_score
+
+        '''check here'''
         if args.negative_adversarial_sampling:
             #In self-adversarial sampling, we do not apply back-propagation on the sampling weight
             negative_score = (F.softmax(negative_score * args.adversarial_temperature, dim = 1).detach() 
                               * F.logsigmoid(-negative_score)).sum(dim = 1)
         else:
-            negative_score = F.logsigmoid(-negative_score).mean(dim = 1)
+            negative_score = F.relu(-negative_score).mean(dim = 1)
 
         positive_score = model(positive_sample)
 
-        positive_score = F.logsigmoid(positive_score).squeeze(dim = 1)
+        positive_score = gamma1.item() - positive_score
+
+        positive_score = F.relu(positive_score).squeeze(dim = 1)
 
         if args.uni_weight:
             positive_sample_loss = - positive_score.mean()
