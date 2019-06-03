@@ -318,7 +318,7 @@ class KGEModel(nn.Module):
             negative_score = (F.softmax(negative_score * args.adversarial_temperature, dim = 1).detach() 
                               * F.logsigmoid(-negative_score)).sum(dim = 1)
         else:
-            negative_score = F.relu(negative_score).mean(dim = 1) #WARNING: minus is deleted
+            negative_score = F.relu(-negative_score).mean(dim = 1) #WARNING: minus is deleted
 
         positive_score = model(positive_sample)
         #print("positive_score :", positive_score)
@@ -330,8 +330,8 @@ class KGEModel(nn.Module):
         #print("positive_score: ", positive_score)
         #print("-*---------------------------------*-")
         if args.uni_weight:
-            positive_sample_loss = - positive_score.mean()
-            negative_sample_loss = - negative_score.mean()
+            positive_sample_loss = positive_score.mean()
+            negative_sample_loss = negative_score.mean()
         else:
             positive_sample_loss = (subsampling_weight * positive_score).sum()/subsampling_weight.sum()
             #print("positive_sample_loss: ", positive_sample_loss)
