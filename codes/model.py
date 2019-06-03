@@ -318,24 +318,24 @@ class KGEModel(nn.Module):
             negative_score = (F.softmax(negative_score * args.adversarial_temperature, dim = 1).detach() 
                               * F.logsigmoid(-negative_score)).sum(dim = 1)
         else:
-            negative_score = F.logsigmoid(negative_score).mean(dim = 1) #WARNING: minus is deleted
+            negative_score = F.logsigmoid(-negative_score).mean(dim = 1) #WARNING: minus is deleted
 
         positive_score = model(positive_sample)
         #print("positive_score :", positive_score)
         positive_score = positive_score - gamma1.item()
         #print("positive_score after subtracting gamma1: ", positive_score)
-        positive_score = F.logsigmoid(positive_score).squeeze(dim = 1)
+        positive_score = F.logsigmoid(-positive_score).squeeze(dim = 1)
         #print("Afterwards")
         #print("negative_score: ", negative_score)
         #print("positive_score: ", positive_score)
         #print("-*---------------------------------*-")
         if args.uni_weight:
-            positive_sample_loss = positive_score.mean()
-            negative_sample_loss = negative_score.mean()
+            positive_sample_loss = -positive_score.mean()
+            negative_sample_loss = - negative_score.mean()
         else:
-            positive_sample_loss = (subsampling_weight * positive_score).sum()/subsampling_weight.sum()
+            positive_sample_loss = -(subsampling_weight * positive_score).sum()/subsampling_weight.sum()
             #print("positive_sample_loss: ", positive_sample_loss)
-            negative_sample_loss = (subsampling_weight * negative_score).sum()/subsampling_weight.sum()
+            negative_sample_loss = -(subsampling_weight * negative_score).sum()/subsampling_weight.sum()
             #print("negative_sample_loss: ", negative_sample_loss)
 
         loss = (positive_sample_loss + negative_sample_loss)/2
