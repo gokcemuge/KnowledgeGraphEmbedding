@@ -181,10 +181,11 @@ class KGEModel(nn.Module):
             # score = self.gamma_1.item() - torch.norm(score, p=1, dim=2)
             # BURAYI TERS CEVIRDIM
             score = - (self.gamma_1.item() - torch.norm(score, p=1, dim=2))
-            print("pos: ", score)
+
         elif sampling == 'negative':
             score = (self.gamma_2.item() - torch.norm(score, p=1, dim=2))
-            print("neg: ", score)
+
+
         return score
 
     def DistMult(self, head, relation, tail, mode):
@@ -427,7 +428,6 @@ class KGEModel(nn.Module):
                         batch_size = positive_sample.size(0)
 
                         score = model((positive_sample, negative_sample), mode)
-                        print("test scores")
                         score += filter_bias
 
                         # Explicitly sort all the entities to ensure that there is no test exposure bias
