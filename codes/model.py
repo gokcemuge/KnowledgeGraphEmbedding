@@ -171,15 +171,19 @@ class KGEModel(nn.Module):
 
         return score
 
-    def TransE(self, head, relation, tail, mode):
+    def TransE(self, head, relation, tail, mode, sampling):
         if mode == 'head-batch':
             score = head + (relation - tail)
         else:
             score = (head + relation) - tail
 
-        # score = self.gamma_1.item() - torch.norm(score, p=1, dim=2)
-        # BURAYI TERS CEVIRDIM
-        score = - (self.gamma_1.item() - torch.norm(score, p=1, dim=2))
+        if sampling == 'positive':
+            # score = self.gamma_1.item() - torch.norm(score, p=1, dim=2)
+            # BURAYI TERS CEVIRDIM
+            score = - (self.gamma_1.item() - torch.norm(score, p=1, dim=2))
+        elif sampling == 'negative':
+            score = (self.gamma_2.item() - torch.norm(score, p=1, dim=2))
+
         return score
 
     def DistMult(self, head, relation, tail, mode):
@@ -294,7 +298,7 @@ class KGEModel(nn.Module):
             negative_sample = negative_sample.cuda()
             subsampling_weight = subsampling_weight.cuda()
 
-        negative_score = model((positive_sample, negative_sample), mode=mode)
+        negative_score = model((positive_sample, negative_sample), mode=mode, sampling='negative')
 
         if args.negative_adversarial_sampling:
             # In self-adversarial sampling, we do not apply back-propagation on the sampling weight
@@ -303,7 +307,7 @@ class KGEModel(nn.Module):
         else:
             negative_score = F.relu(-negative_score).mean(dim=1)
 
-        positive_score = model(positive_sample)
+        positive_score = model(positive_sample, sampling='positive')
 
         positive_score = F.relu(positive_score).squeeze(dim=1)
 
@@ -312,10 +316,10 @@ class KGEModel(nn.Module):
             positive_sample_loss = - positive_score.mean()
             negative_sample_loss = - negative_score.mean()
         else:
-            # BURADAKI NEGATIVI SILDIM
+            # NEGATIVE SIGN REMOVED
             positive_sample_loss = (subsampling_weight * positive_score).sum() / subsampling_weight.sum()
             negative_sample_loss = (subsampling_weight * negative_score).sum() / subsampling_weight.sum()
-        # BURAYI ORJINALI OLARAK BIRAKTIM
+
         loss = (positive_sample_loss + negative_sample_loss) / 2
 
         if args.regularization != 0.0:
