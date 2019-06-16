@@ -260,8 +260,14 @@ def main(args):
         # Set training configuration
         current_learning_rate = args.learning_rate
         # TODO: change the optimizer to AdaGrad
+        '''
         optimizer = torch.optim.Adam(
             filter(lambda p: p.requires_grad, kge_model.parameters()), 
+            lr=current_learning_rate
+        )
+        '''
+        optimizer = torch.optim.Adagrad(
+            filter(lambda p: p.requires_grad, kge_model.parameters()),
             lr=current_learning_rate
         )
         if args.warm_up_steps:
