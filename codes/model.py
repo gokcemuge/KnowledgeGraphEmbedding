@@ -179,11 +179,12 @@ class KGEModel(nn.Module):
 
         if sampling == 'positive':
             # score = self.gamma_1.item() - torch.norm(score, p=1, dim=2)
-            # BURAYI TERS CEVIRDIM
+            # SWAPPING PART
             score = - (self.gamma_1.item() - torch.norm(score, p=1, dim=2))
 
         elif sampling == 'negative':
-            score = (self.gamma_2.item() - torch.norm(score, p=1, dim=2))
+            # SWAPPING PART
+            score = - (self.gamma_2.item() - torch.norm(score, p=1, dim=2))
 
 
         return score
