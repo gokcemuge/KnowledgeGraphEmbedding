@@ -20,7 +20,7 @@ from dataloader import TestDataset
 
 
 class KGEModel(nn.Module):
-    def __init__(self, model_name, nentity, nrelation, hidden_dim, gamma,
+    def __init__(self, model_name, nentity, nrelation, hidden_dim, gamma_1, gamma_2,
                  double_entity_embedding=False, double_relation_embedding=False):
         super(KGEModel, self).__init__()
         self.model_name = model_name
@@ -29,13 +29,17 @@ class KGEModel(nn.Module):
         self.hidden_dim = hidden_dim
         self.epsilon = 2.0
 
-        self.gamma = nn.Parameter(
-            torch.Tensor([gamma]),
+        self.gamma_2 = nn.Parameter(
+            torch.Tensor([gamma_1]),
             requires_grad=False
         )
 
+        self.gamma_2 = nn.Parameter(
+            torch.Tensor([gamma_2]),
+            requires_grad=False
+        )
         self.embedding_range = nn.Parameter(
-            torch.Tensor([(self.gamma.item() + self.epsilon) / hidden_dim]),
+            torch.Tensor([(self.gamma_1.item() + self.epsilon) / hidden_dim]),
             requires_grad=False
         )
 
@@ -173,7 +177,7 @@ class KGEModel(nn.Module):
         else:
             score = (head + relation) - tail
 
-        score = self.gamma.item() - torch.norm(score, p=1, dim=2)
+        score = self.gamma_1.item() - torch.norm(score, p=1, dim=2)
         return score
 
     def DistMult(self, head, relation, tail, mode):
@@ -217,7 +221,7 @@ class KGEModel(nn.Module):
         re_score = torch.norm(re_score, p=1, dim=2)
         im_score = torch.norm(im_score, p=1, dim=2)
 
-        score = self.gamma.item() - re_score - im_score
+        score = self.gamma_1.item() - re_score - im_score
         return score
 
     def RotatE(self, head, relation, tail, mode):
@@ -247,7 +251,7 @@ class KGEModel(nn.Module):
         score = torch.stack([re_score, im_score], dim=0)
         score = score.norm(dim=0)
 
-        score = self.gamma.item() - score.sum(dim=2)
+        score = self.gamma_1.item() - score.sum(dim=2)
         return score
 
     def pRotatE(self, head, relation, tail, mode):
@@ -267,7 +271,7 @@ class KGEModel(nn.Module):
         score = torch.sin(score)
         score = torch.abs(score)
 
-        score = self.gamma.item() - score.sum(dim=2) * self.modulus
+        score = self.gamma_1.item() - score.sum(dim=2) * self.modulus
         return score
 
     @staticmethod

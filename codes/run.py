@@ -44,7 +44,8 @@ def parse_args(args=None):
     
     parser.add_argument('-n', '--negative_sample_size', default=128, type=int)
     parser.add_argument('-d', '--hidden_dim', default=500, type=int)
-    parser.add_argument('-g', '--gamma', default=12.0, type=float)
+    parser.add_argument('-g1', '--gamma_1', default=12.0, type=float)
+    parser.add_argument('-g2', '--gamma_2', default=12.0, type=float)
     parser.add_argument('-adv', '--negative_adversarial_sampling', action='store_true')
     parser.add_argument('-a', '--adversarial_temperature', default=1.0, type=float)
     parser.add_argument('-b', '--batch_size', default=1024, type=int)
@@ -223,7 +224,8 @@ def main(args):
         nentity=nentity,
         nrelation=nrelation,
         hidden_dim=args.hidden_dim,
-        gamma=args.gamma,
+        gamma_1=args.gamma_1,
+        gamma_2=args.gamma_2,
         double_entity_embedding=args.double_entity_embedding,
         double_relation_embedding=args.double_relation_embedding
     )
@@ -257,6 +259,7 @@ def main(args):
         
         # Set training configuration
         current_learning_rate = args.learning_rate
+        # TODO: change the optimizer to AdaGrad
         optimizer = torch.optim.Adam(
             filter(lambda p: p.requires_grad, kge_model.parameters()), 
             lr=current_learning_rate
@@ -288,7 +291,8 @@ def main(args):
     logging.info('batch_size = %d' % args.batch_size)
     logging.info('negative_adversarial_sampling = %d' % args.negative_adversarial_sampling)
     logging.info('hidden_dim = %d' % args.hidden_dim)
-    logging.info('gamma = %f' % args.gamma)
+    logging.info('gamma_1 = %f' % args.gamma_1)
+    logging.info('gamma_2 = %f' % args.gamma_2)
     logging.info('negative_adversarial_sampling = %s' % str(args.negative_adversarial_sampling))
     if args.negative_adversarial_sampling:
         logging.info('adversarial_temperature = %f' % args.adversarial_temperature)
