@@ -312,8 +312,9 @@ class KGEModel(nn.Module):
             positive_sample_loss = - positive_score.mean()
             negative_sample_loss = - negative_score.mean()
         else:
-            positive_sample_loss = - (subsampling_weight * positive_score).sum() / subsampling_weight.sum()
-            negative_sample_loss = - (subsampling_weight * negative_score).sum() / subsampling_weight.sum()
+            # BURADAKI NEGATIVI SILDIM
+            positive_sample_loss = (subsampling_weight * positive_score).sum() / subsampling_weight.sum()
+            negative_sample_loss = (subsampling_weight * negative_score).sum() / subsampling_weight.sum()
         # BURAYI ORJINALI OLARAK BIRAKTIM
         loss = (positive_sample_loss + negative_sample_loss) / 2
 
