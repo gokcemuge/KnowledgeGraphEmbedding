@@ -314,8 +314,8 @@ class KGEModel(nn.Module):
         else:
             positive_sample_loss = - (subsampling_weight * positive_score).sum() / subsampling_weight.sum()
             negative_sample_loss = - (subsampling_weight * negative_score).sum() / subsampling_weight.sum()
-        # BURAYA NEGATIVE EKLEDIM
-        loss = -(positive_sample_loss + negative_sample_loss) / 2
+        # BURAYI ORJINALI OLARAK BIRAKTIM
+        loss = (positive_sample_loss + negative_sample_loss) / 2
 
         if args.regularization != 0.0:
             # Use L3 regularization for ComplEx and DistMult
