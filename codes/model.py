@@ -181,9 +181,10 @@ class KGEModel(nn.Module):
             # score = self.gamma_1.item() - torch.norm(score, p=1, dim=2)
             # BURAYI TERS CEVIRDIM
             score = - (self.gamma_1.item() - torch.norm(score, p=1, dim=2))
+            print("pos")
         elif sampling == 'negative':
             score = (self.gamma_2.item() - torch.norm(score, p=1, dim=2))
-
+            print("neg")
         return score
 
     def DistMult(self, head, relation, tail, mode):
