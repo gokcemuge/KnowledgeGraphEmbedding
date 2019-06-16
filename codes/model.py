@@ -177,16 +177,16 @@ class KGEModel(nn.Module):
         else:
             score = (head + relation) - tail
 
-        if sampling == 'positive':
+        #if sampling == 'positive':
             # score = self.gamma_1.item() - torch.norm(score, p=1, dim=2)
-            # SWAPPING PART
-            score = - (self.gamma_1.item() - torch.norm(score, p=1, dim=2))
 
-        elif sampling == 'negative':
+
+        if sampling == 'negative':
             # SWAPPING PART
             score = - (self.gamma_2.item() - torch.norm(score, p=1, dim=2))
-
-
+        else:
+            # SWAPPING PART
+            score = - (self.gamma_1.item() - torch.norm(score, p=1, dim=2))
         return score
 
     def DistMult(self, head, relation, tail, mode):
