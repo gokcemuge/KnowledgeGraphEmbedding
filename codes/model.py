@@ -316,15 +316,16 @@ class KGEModel(nn.Module):
 
     #TODO: uni weights nedir bak
         if args.uni_weight:
-            # NEGATIVE SIGN REMOVED
-            positive_sample_loss = positive_score.mean()
-            negative_sample_loss = negative_score.mean()
+            # NEGATIVE SIGN REMAINED
+            positive_sample_loss = - positive_score.mean()
+            negative_sample_loss = - negative_score.mean()
         else:
-            # NEGATIVE SIGN REMOVED
-            positive_sample_loss = (subsampling_weight * positive_score).sum() / subsampling_weight.sum()
-            negative_sample_loss = (subsampling_weight * negative_score).sum() / subsampling_weight.sum()
+            # NEGATIVE SIGN REMAINED
+            positive_sample_loss = -(subsampling_weight * positive_score).sum() / subsampling_weight.sum()
+            negative_sample_loss = -(subsampling_weight * negative_score).sum() / subsampling_weight.sum()
 
-        loss = (positive_sample_loss + negative_sample_loss) / 2
+        # NEGATIVE SIGN ADDED
+        loss = -(positive_sample_loss + negative_sample_loss) / 2
 
         if args.regularization != 0.0:
             # Use L3 regularization for ComplEx and DistMult
