@@ -182,11 +182,11 @@ class KGEModel(nn.Module):
 
 
         if sampling == 'negative':
-            # SWAPPING PART
-            score = - (self.gamma_2.item() - torch.norm(score, p=1, dim=2))
+            # SWAPPING PART -moved to loss function
+            score = (self.gamma_2.item() - torch.norm(score, p=1, dim=2))
         else:
-            # SWAPPING PART
-            score = - (self.gamma_1.item() - torch.norm(score, p=1, dim=2))
+            # SWAPPING PART -moved to loss function
+            score = (self.gamma_1.item() - torch.norm(score, p=1, dim=2))
         return score
 
     def DistMult(self, head, relation, tail, mode):
@@ -305,14 +305,14 @@ class KGEModel(nn.Module):
 
         if args.negative_adversarial_sampling:
             # In self-adversarial sampling, we do not apply back-propagation on the sampling weight
-            negative_score = (F.softmax(negative_score * args.adversarial_temperature, dim=1).detach()
-                              * F.relu(-negative_score)).sum(dim=1)
+            negative_score = (F.softmax(-negative_score * args.adversarial_temperature, dim=1).detach()
+                              * F.relu(negative_score)).sum(dim=1)
         else:
-            negative_score = F.relu(-negative_score).mean(dim=1)
+            negative_score = F.relu(negative_score).mean(dim=1)
 
         positive_score = model(positive_sample, sampling='positive')
 
-        positive_score = F.relu(positive_score).squeeze(dim=1)
+        positive_score = F.relu(-positive_score).squeeze(dim=1)
 
     #TODO: uni weights nedir bak
         if args.uni_weight:
@@ -428,6 +428,7 @@ class KGEModel(nn.Module):
 
                         batch_size = positive_sample.size(0)
 
+                        #TODO:HOW IS THIS WORKING?
                         score = model((positive_sample, negative_sample), mode)
                         score += filter_bias
 
