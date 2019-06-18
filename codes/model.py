@@ -260,7 +260,15 @@ class KGEModel(nn.Module):
         score = torch.stack([re_score, im_score], dim=0)
         score = score.norm(dim=0)
 
-        score = self.gamma_1.item() - score.sum(dim=2)
+       # score = self.gamma_1.item() - score.sum(dim=2)
+
+        if sampling == 'negative':
+            # SWAPPING PART - negative sign should be added
+            score = self.gamma_2.item() - score.sum(dim=2)
+        else:
+            # SWAPPING PART
+            score = self.gamma_1.item() - score.sum(dim=2)
+
         return score
 
     def pRotatE(self, head, relation, tail, mode):
