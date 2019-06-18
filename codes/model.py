@@ -215,7 +215,7 @@ class KGEModel(nn.Module):
         score = score.sum(dim=2)
         return score
 
-    def TransComplEx(self, head, relation, tail, mode):
+    def TransComplEx(self, head, relation, tail, mode, sampling):
         re_head, im_head = torch.chunk(head, 2, dim=2)
         re_relation, im_relation = torch.chunk(relation, 2, dim=2)
         re_tail, im_tail = torch.chunk(tail, 2, dim=2)
@@ -230,7 +230,14 @@ class KGEModel(nn.Module):
         re_score = torch.norm(re_score, p=1, dim=2)
         im_score = torch.norm(im_score, p=1, dim=2)
 
-        score = self.gamma_1.item() - re_score - im_score
+        #score = self.gamma_1.item() - re_score - im_score
+
+        if sampling == 'negative':
+            # SWAPPING PART -moved to loss function
+            score = self.gamma_2.item() - re_score - im_score
+        else:
+            # SWAPPING PART -moved to loss function
+            score = self.gamma_1.item() - re_score - im_score
         return score
 
     def RotatE(self, head, relation, tail, mode, sampling):
@@ -260,7 +267,6 @@ class KGEModel(nn.Module):
         score = torch.stack([re_score, im_score], dim=0)
         score = score.norm(dim=0)
 
-        # score = self.gamma_1.item() - score.sum(dim=2)
 
         if sampling == 'negative':
             # SWAPPING PART - negative sign should be added
