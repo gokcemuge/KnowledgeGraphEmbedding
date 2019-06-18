@@ -233,7 +233,7 @@ class KGEModel(nn.Module):
         score = self.gamma_1.item() - re_score - im_score
         return score
 
-    def RotatE(self, head, relation, tail, mode):
+    def RotatE(self, head, relation, tail, mode, sampling):
         pi = 3.14159265358979323846
 
         re_head, im_head = torch.chunk(head, 2, dim=2)
