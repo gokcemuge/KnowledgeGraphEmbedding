@@ -259,8 +259,8 @@ def main(args):
         
         # Set training configuration
         current_learning_rate = args.learning_rate
-        # TODO: change the optimizer to AdaGrad
-        '''
+
+
         optimizer = torch.optim.Adam(
             filter(lambda p: p.requires_grad, kge_model.parameters()), 
             lr=current_learning_rate
@@ -270,6 +270,7 @@ def main(args):
             filter(lambda p: p.requires_grad, kge_model.parameters()),
             lr=current_learning_rate
         )
+        '''
 
         if args.warm_up_steps:
             warm_up_steps = args.warm_up_steps
@@ -319,7 +320,7 @@ def main(args):
             if step >= warm_up_steps:
                 current_learning_rate = current_learning_rate / 10
                 logging.info('Change learning_rate to %f at step %d' % (current_learning_rate, step))
-                '''
+
                 optimizer = torch.optim.Adam(
                     filter(lambda p: p.requires_grad, kge_model.parameters()), 
                     lr=current_learning_rate
@@ -329,7 +330,7 @@ def main(args):
                     filter(lambda p: p.requires_grad, kge_model.parameters()),
                     lr=current_learning_rate
                 )
-
+                '''
                 warm_up_steps = warm_up_steps * 3
             
             if step % args.save_checkpoint_steps == 0:
