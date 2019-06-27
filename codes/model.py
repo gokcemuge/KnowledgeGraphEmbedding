@@ -20,7 +20,7 @@ from dataloader import TestDataset
 
 
 class KGEModel(nn.Module):
-    def __init__(self, model_name, nentity, nrelation, hidden_dim, gamma_1, gamma_2,
+    def __init__(self, model_name, nentity, nrelation, hidden_dim, gamma,
                  double_entity_embedding=False, double_relation_embedding=False):
         super(KGEModel, self).__init__()
         self.model_name = model_name
@@ -29,17 +29,13 @@ class KGEModel(nn.Module):
         self.hidden_dim = hidden_dim
         self.epsilon = 2.0
 
-        self.gamma_1 = nn.Parameter(
-            torch.Tensor([gamma_1]),
+        self.gamma = nn.Parameter(
+            torch.Tensor([gamma]),
             requires_grad=False
         )
 
-        self.gamma_2 = nn.Parameter(
-            torch.Tensor([gamma_2]),
-            requires_grad=False
-        )
         self.embedding_range = nn.Parameter(
-            torch.Tensor([(self.gamma_1.item() + self.epsilon) / hidden_dim]),
+            torch.Tensor([(self.gamma.item() + self.epsilon) / hidden_dim]),
             requires_grad=False
         )
 
@@ -64,7 +60,7 @@ class KGEModel(nn.Module):
             self.modulus = nn.Parameter(torch.Tensor([[0.5 * self.embedding_range.item()]]))
 
         # Do not forget to modify this line when you add a new model in the "forward" function
-        if model_name not in ['TransE', 'DistMult', 'ComplEx', 'RotatE', 'pRotatE', 'TransComplEx']:
+        if model_name not in ['TransE', 'DistMult', 'ComplEx', 'RotatE', 'pRotatE']:
             raise ValueError('model %s not supported' % model_name)
 
         if model_name == 'RotatE' and (not double_entity_embedding or double_relation_embedding):
@@ -76,7 +72,7 @@ class KGEModel(nn.Module):
         if model_name == 'TransComplEx' and (not double_entity_embedding or not double_relation_embedding):
             raise ValueError('TransComplEx should use --double_entity_embedding and --double_relation_embedding')
 
-    def forward(self, sample, mode='single', sampling='positive'):
+    def forward(self, sample, mode='single'):
         '''
         Forward function that calculate the score of a batch of triples.
         In the 'single' mode, sample is a batch of triple.
@@ -165,28 +161,19 @@ class KGEModel(nn.Module):
         }
 
         if self.model_name in model_func:
-            score = model_func[self.model_name](head, relation, tail, mode, sampling)
+            score = model_func[self.model_name](head, relation, tail, mode)
         else:
             raise ValueError('model %s not supported' % self.model_name)
 
         return score
 
-    def TransE(self, head, relation, tail, mode, sampling):
+    def TransE(self, head, relation, tail, mode):
         if mode == 'head-batch':
             score = head + (relation - tail)
         else:
             score = (head + relation) - tail
 
-        #if sampling == 'positive':
-            # score = self.gamma_1.item() - torch.norm(score, p=1, dim=2)
-
-
-        if sampling == 'negative':
-            # SWAPPING PART -moved to loss function
-            score = (self.gamma_2.item() - torch.norm(score, p=1, dim=2))
-        else:
-            # SWAPPING PART -moved to loss function
-            score = (self.gamma_1.item() - torch.norm(score, p=1, dim=2))
+        score = self.gamma.item() - torch.norm(score, p=1, dim=2)
         return score
 
     def DistMult(self, head, relation, tail, mode):
@@ -215,32 +202,7 @@ class KGEModel(nn.Module):
         score = score.sum(dim=2)
         return score
 
-    def TransComplEx(self, head, relation, tail, mode, sampling):
-        re_head, im_head = torch.chunk(head, 2, dim=2)
-        re_relation, im_relation = torch.chunk(relation, 2, dim=2)
-        re_tail, im_tail = torch.chunk(tail, 2, dim=2)
-
-        if mode == 'head-batch':
-            re_score = re_head + (re_relation - re_tail)
-            im_score = im_head + (im_relation + im_tail)
-        else:
-            re_score = (re_head + re_relation) - re_tail
-            im_score = (im_head + im_relation) + im_tail
-
-        re_score = torch.norm(re_score, p=1, dim=2)
-        im_score = torch.norm(im_score, p=1, dim=2)
-
-        #score = self.gamma_1.item() - re_score - im_score
-
-        if sampling == 'negative':
-            # SWAPPING PART -moved to loss function
-            score = self.gamma_2.item() - re_score - im_score
-        else:
-            # SWAPPING PART -moved to loss function
-            score = self.gamma_1.item() - re_score - im_score
-        return score
-
-    def RotatE(self, head, relation, tail, mode, sampling):
+    def RotatE(self, head, relation, tail, mode):
         pi = 3.14159265358979323846
 
         re_head, im_head = torch.chunk(head, 2, dim=2)
@@ -267,13 +229,7 @@ class KGEModel(nn.Module):
         score = torch.stack([re_score, im_score], dim=0)
         score = score.norm(dim=0)
 
-
-        if sampling == 'negative':
-            # SWAPPING PART - negative sign should be added
-            score = self.gamma_2.item() - score.sum(dim=2)
-        else:
-            # SWAPPING PART
-            score = self.gamma_1.item() - score.sum(dim=2)
+        score = self.gamma.item() - score.sum(dim=2)
         return score
 
     def pRotatE(self, head, relation, tail, mode):
@@ -293,10 +249,28 @@ class KGEModel(nn.Module):
         score = torch.sin(score)
         score = torch.abs(score)
 
-        score = self.gamma_1.item() - score.sum(dim=2) * self.modulus
+        score = self.gamma.item() - score.sum(dim=2) * self.modulus
         return score
 
-    #ReLu is used instead of log sigmoid
+    def TransComplEx(self, head, relation, tail, mode):
+        re_head, im_head = torch.chunk(head, 2, dim=2)
+        re_relation, im_relation = torch.chunk(relation, 2, dim=2)
+        re_tail, im_tail = torch.chunk(tail, 2, dim=2)
+
+        if mode == 'head-batch':
+            re_score = re_head + (re_relation - re_tail)
+            im_score = im_head + (im_relation + im_tail)
+        else:
+            re_score = (re_head + re_relation) - re_tail
+            im_score = (im_head + im_relation) + im_tail
+
+        re_score = torch.norm(re_score, p=1, dim=2)
+        im_score = torch.norm(im_score, p=1, dim=2)
+
+        score = self.gamma.item() - re_score - im_score
+
+        return score
+
     @staticmethod
     def train_step(model, optimizer, train_iterator, args):
         '''
@@ -314,30 +288,27 @@ class KGEModel(nn.Module):
             negative_sample = negative_sample.cuda()
             subsampling_weight = subsampling_weight.cuda()
 
-        negative_score = -model((positive_sample, negative_sample), mode=mode, sampling='negative')
+        negative_score = model((positive_sample, negative_sample), mode=mode)
 
         if args.negative_adversarial_sampling:
             # In self-adversarial sampling, we do not apply back-propagation on the sampling weight
             negative_score = (F.softmax(negative_score * args.adversarial_temperature, dim=1).detach()
-                              * F.relu(-negative_score)).sum(dim=1)
+                              * F.logsigmoid(-negative_score)).sum(dim=1)
         else:
-            negative_score = F.relu(-negative_score).mean(dim=1)
+            negative_score = F.logsigmoid(-negative_score).mean(dim=1)
 
-        positive_score = -model(positive_sample, sampling='positive')
+        positive_score = model(positive_sample)
 
-        positive_score = F.relu(positive_score).squeeze(dim=1)
+        positive_score = F.logsigmoid(positive_score).squeeze(dim=1)
 
-    #TODO: uni weights nedir bak
         if args.uni_weight:
-            # NEGATIVE SIGN REMOVED
-            positive_sample_loss = positive_score.mean()
-            negative_sample_loss = negative_score.mean()
+            positive_sample_loss = - positive_score.mean()
+            negative_sample_loss = - negative_score.mean()
         else:
-            # NEGATIVE SIGN REMOVED
-            positive_sample_loss = (subsampling_weight * positive_score).sum() / subsampling_weight.sum()
-            negative_sample_loss = (subsampling_weight * negative_score).sum() / subsampling_weight.sum()
+            positive_sample_loss = - (subsampling_weight * positive_score).sum() / subsampling_weight.sum()
+            negative_sample_loss = - (subsampling_weight * negative_score).sum() / subsampling_weight.sum()
 
-        loss =(positive_sample_loss + negative_sample_loss) / 2
+        loss = (positive_sample_loss + negative_sample_loss) / 2
 
         if args.regularization != 0.0:
             # Use L3 regularization for ComplEx and DistMult
@@ -441,7 +412,6 @@ class KGEModel(nn.Module):
 
                         batch_size = positive_sample.size(0)
 
-                        #TODO:HOW IS THIS WORKING?
                         score = model((positive_sample, negative_sample), mode)
                         score += filter_bias
 
