@@ -236,6 +236,7 @@ def main(args):
         double_relation_embedding=args.double_relation_embedding
     )
 
+    #TODO:check
     kge_model2 = KGEModel(
         model_name='RotatE',
         nentity=nentity,
