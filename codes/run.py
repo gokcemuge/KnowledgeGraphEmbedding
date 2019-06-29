@@ -137,7 +137,7 @@ def set_logger(args):
     Write logs to checkpoint and console
     '''
 
-    if args.do_train:
+    if args.do_train1:
         log_file = os.path.join(args.save_path or args.init_checkpoint, 'train.log')
     else:
         log_file = os.path.join(args.save_path or args.init_checkpoint, 'test.log')
@@ -154,6 +154,8 @@ def set_logger(args):
     formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
     console.setFormatter(formatter)
     logging.getLogger('').addHandler(console)
+
+
 
 
 def log_metrics(mode, step, metrics):
@@ -234,12 +236,26 @@ def main(args):
         double_relation_embedding=args.double_relation_embedding
     )
 
+    kge_model2 = KGEModel(
+        model_name='RotatE',
+        nentity=nentity,
+        nrelation=nrelation,
+        hidden_dim=200,
+        gamma=args.gamma,
+        double_entity_embedding=True,
+        double_relation_embedding=False
+    )
+
     logging.info('Model Parameter Configuration:')
     for name, param in kge_model.named_parameters():
         logging.info('Parameter %s: %s, require_grad = %s' % (name, str(param.size()), str(param.requires_grad)))
 
+    for name, param in kge_model2.named_parameters():
+        logging.info('Parameter %s: %s, require_grad = %s' % (name, str(param.size()), str(param.requires_grad)))
+
     if args.cuda:
         kge_model = kge_model.cuda()
+        kge_model2 = kge_model2.cuda()
 
     if args.do_train:
         # Set training dataloader iterator
@@ -260,13 +276,22 @@ def main(args):
         )
 
         train_iterator = BidirectionalOneShotIterator(train_dataloader_head, train_dataloader_tail)
+        train_iterator2 = BidirectionalOneShotIterator(train_dataloader_head, train_dataloader_tail)
 
         # Set training configuration
+        #TODO: learning rate and optimizer for rotatE
         current_learning_rate = args.learning_rate
         optimizer = torch.optim.Adam(
             filter(lambda p: p.requires_grad, kge_model.parameters()),
             lr=current_learning_rate
         )
+
+        current_learning_rate2 = 0.0001
+        optimizer2 = torch.optim.Adam(
+            filter(lambda p: p.requires_grad, kge_model2.parameters()),
+            lr=current_learning_rate2
+        )
+
         if args.warm_up_steps:
             warm_up_steps = args.warm_up_steps
         else:
@@ -278,6 +303,7 @@ def main(args):
         checkpoint = torch.load(os.path.join(args.init_checkpoint, 'checkpoint'))
         init_step = checkpoint['step']
         kge_model.load_state_dict(checkpoint['model_state_dict'])
+        #TODO:check
         if args.do_train:
             current_learning_rate = checkpoint['current_learning_rate']
             warm_up_steps = checkpoint['warm_up_steps']
@@ -291,6 +317,7 @@ def main(args):
     logging.info('Start Training...')
     logging.info('init_step = %d' % init_step)
     logging.info('learning_rate = %d' % current_learning_rate)
+    logging.info('learning_rate2 = %d' % current_learning_rate2)
     logging.info('batch_size = %d' % args.batch_size)
     logging.info('negative_adversarial_sampling = %d' % args.negative_adversarial_sampling)
     logging.info('hidden_dim = %d' % args.hidden_dim)
@@ -308,8 +335,11 @@ def main(args):
         for step in range(init_step, args.max_steps):
 
             log = kge_model.train_step(kge_model, optimizer, train_iterator, args)
+            #TODO: log2?
+            log2 = kge_model2.train_step(kge_model2, optimizer2, train_iterator2, args)
 
             training_logs.append(log)
+            training_logs.append(log2)
 
             if step >= warm_up_steps:
                 current_learning_rate = current_learning_rate / 10
@@ -317,6 +347,15 @@ def main(args):
                 optimizer = torch.optim.Adam(
                     filter(lambda p: p.requires_grad, kge_model.parameters()),
                     lr=current_learning_rate
+                )
+                warm_up_steps = warm_up_steps * 3
+
+                #TODO:check
+                current_learning_rate2 = current_learning_rate2 / 10
+                logging.info('Change learning_rate to %f at step %d' % (current_learning_rate2, step))
+                optimizer2 = torch.optim.Adam(
+                    filter(lambda p: p.requires_grad, kge_model2.parameters()),
+                    lr=current_learning_rate2
                 )
                 warm_up_steps = warm_up_steps * 3
 
@@ -349,17 +388,18 @@ def main(args):
 
     if args.do_valid:
         logging.info('Evaluating on Valid Dataset...')
-        metrics = kge_model.test_step(kge_model, valid_triples, all_true_triples, args)
+        #TODO:check
+        metrics = kge_model.test_step(kge_model, kge_model2, valid_triples, all_true_triples, args)
         log_metrics('Valid', step, metrics)
 
     if args.do_test:
         logging.info('Evaluating on Test Dataset...')
-        metrics = kge_model.test_step(kge_model, test_triples, all_true_triples, args)
+        metrics = kge_model.test_step(kge_model, kge_model2, test_triples, all_true_triples, args)
         log_metrics('Test', step, metrics)
 
     if args.evaluate_train:
         logging.info('Evaluating on Training Dataset...')
-        metrics = kge_model.test_step(kge_model, train_triples, all_true_triples, args)
+        metrics = kge_model.test_step(kge_model, kge_model2, train_triples, all_true_triples, args)
         log_metrics('Test', step, metrics)
 
 

@@ -335,12 +335,13 @@ class KGEModel(nn.Module):
         return log
 
     @staticmethod
-    def test_step(model, test_triples, all_true_triples, args):
+    def test_step(model, model2, test_triples, all_true_triples, args):
         '''
         Evaluate the model on test or valid datasets
         '''
 
         model.eval()
+        model2.eval()
 
         if args.countries:
             # Countries S* datasets are evaluated on AUC-PR
@@ -414,7 +415,12 @@ class KGEModel(nn.Module):
 
                         score = model((positive_sample, negative_sample), mode)
                         score += filter_bias
+                        #TODO: check
+                        score2 = model2((positive_sample, negative_sample), mode)
+                        score2 += filter_bias
 
+                        score = score + score2
+                        #--------- --------- --------- --------- --------- --------- ---------
                         # Explicitly sort all the entities to ensure that there is no test exposure bias
                         argsort = torch.argsort(score, dim=1, descending=True)
 
