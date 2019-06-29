@@ -424,6 +424,9 @@ class KGEModel(nn.Module):
                         print("score 2:", score2)
 
                         score = score + score2
+
+                        print("score final:", score)
+
                         #--------- --------- --------- --------- --------- --------- ---------
                         # Explicitly sort all the entities to ensure that there is no test exposure bias
                         argsort = torch.argsort(score, dim=1, descending=True)
