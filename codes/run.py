@@ -333,14 +333,46 @@ def main(args):
         training_logs = []
 
         # Training Loop
+
+        lambda1 = torch.tensor(np.random.random())
+        lambda1.cuda()
+        optimizer_total = torch.optim.Adam(filter(lambda p: p.requires_grad, [lambda1], lr=0.0005))
+
         for step in range(init_step, args.max_steps):
 
-            log = kge_model.train_step(kge_model, optimizer, train_iterator, args)
+            log, positive_score_model1, negative_score_model1 = kge_model.train_step(kge_model, optimizer, train_iterator, args)
             #TODO: log2?
-            log2 = kge_model2.train_step(kge_model2, optimizer2, train_iterator2, args)
+            log2, positive_score_model2, negative_score_model2 = kge_model2.train_step(kge_model2, optimizer2, train_iterator2, args)
+
+            #TRAINING FOR LOSS TOTAL (calculating one score from two models)
+            #clear the optimizer
+            optimizer_total.zero_grad()
+            #check lambda's boundaries
+            if(lambda1 > 1):
+                lambda1 = 1
+            if (lambda1 < 0):
+                lambda1 = 0
+            lambda2 = 1 - lambda1
+            pos_total = lambda1 * positive_score_model1 + lambda2 * positive_score_model2
+            pos_total = F.logsigmoid(pos_total).squeeze(dim=1)
+            pos_total = - pos_total.mean()
+            
+            neg_total = lambda1 * negative_score_model1 + lambda2 * negative_score_model2
+            neg_total = F.logsigmoid(-neg_total).mean(dim=1)
+            neg_total = - neg_total.mean()
+            
+            loss_total = (pos_total + neg_total) / 2
+
+            optimizer_total_log = {'total loss': loss_total}
+
+            loss_total.backward()
+            optimizer_total.step()
+
+
 
             training_logs.append(log)
             training_logs.append(log2)
+            training_logs.append(optimizer_total_log)
 
             if step >= warm_up_steps:
                 current_learning_rate = current_learning_rate / 10

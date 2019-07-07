@@ -289,6 +289,7 @@ class KGEModel(nn.Module):
             subsampling_weight = subsampling_weight.cuda()
 
         negative_score = model((positive_sample, negative_sample), mode=mode)
+        negative_score_initial=negative_score
 
         if args.negative_adversarial_sampling:
             # In self-adversarial sampling, we do not apply back-propagation on the sampling weight
@@ -298,7 +299,7 @@ class KGEModel(nn.Module):
             negative_score = F.logsigmoid(-negative_score).mean(dim=1)
 
         positive_score = model(positive_sample)
-
+        positive_score_inital = positive_score
         positive_score = F.logsigmoid(positive_score).squeeze(dim=1)
 
         if args.uni_weight:
@@ -332,7 +333,7 @@ class KGEModel(nn.Module):
             'loss': loss.item()
         }
 
-        return log
+        return log, negative_score_initial, positive_score_inital
 
     @staticmethod
     def test_step(model, model2, test_triples, all_true_triples, args):
@@ -419,9 +420,8 @@ class KGEModel(nn.Module):
                         score2 = model2((positive_sample, negative_sample), mode)
                         score2 += filter_bias
 
-                        #TODO: delete here
-                        print("score 1:", score)
-                        print("score 2:", score2)
+                        #print("score 1:", score)
+                        #print("score 2:", score2)
 
                         score = score + score2
 
