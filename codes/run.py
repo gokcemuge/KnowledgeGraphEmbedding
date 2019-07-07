@@ -369,6 +369,7 @@ def main(args):
             lambda2.cuda()
 
             pos_total = lambda1 * positive_score_model1 + lambda2 * positive_score_model2
+            pos_total.cuda()
             pos_total = F.logsigmoid(pos_total).squeeze(dim=1)
             pos_total = - pos_total.mean()
             
