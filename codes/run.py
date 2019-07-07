@@ -295,9 +295,6 @@ def main(args):
             lr=current_learning_rate2
         )
 
-        lambda1 = torch.tensor(np.random.random())
-        lambda1.cuda()
-        optimizer_total = torch.optim.Adam([lambda1], lr=0.0005)
 
         if args.warm_up_steps:
             warm_up_steps = args.warm_up_steps
@@ -339,6 +336,11 @@ def main(args):
         training_logs = []
 
         # Training Loop
+        lambda1 = torch.tensor([np.random.random()], requires_grad=True)
+        lambda1.cuda()
+        optimizer_total = torch.optim.Adam([lambda1], lr=0.0005)
+
+
 
         for step in range(init_step, args.max_steps):
 
@@ -349,7 +351,8 @@ def main(args):
             #TRAINING FOR LOSS TOTAL (calculating one score from two models)
             #clear the optimizer
             optimizer_total.zero_grad()
-            lambda1 = torch.tensor(np.random.random())
+
+
             #check lambda's boundaries
            # if(lambda1 > 1):
             #    lambda1 = 1
