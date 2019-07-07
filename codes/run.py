@@ -295,6 +295,10 @@ def main(args):
             lr=current_learning_rate2
         )
 
+        lambda1 = torch.tensor(np.random.random())
+        lambda1.cuda()
+        optimizer_total = torch.optim.Adam([lambda1], lr=0.0005)
+
         if args.warm_up_steps:
             warm_up_steps = args.warm_up_steps
         else:
@@ -335,10 +339,6 @@ def main(args):
         training_logs = []
 
         # Training Loop
-
-        lambda1 = torch.tensor(np.random.random())
-        lambda1.cuda()
-        optimizer_total = torch.optim.Adam([lambda1], lr=0.0005)
 
         for step in range(init_step, args.max_steps):
 
