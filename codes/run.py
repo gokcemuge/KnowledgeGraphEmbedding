@@ -336,8 +336,8 @@ def main(args):
         training_logs = []
 
         # Training Loop
-        lambda1 = torch.tensor([np.random.random()], requires_grad=True)
-        lambda1.cuda()
+        lambda1 = torch.tensor([np.random.random()], requires_grad=True, device="cuda")
+
         optimizer_total = torch.optim.Adam([lambda1], lr=0.0005)
 
 
