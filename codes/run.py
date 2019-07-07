@@ -353,10 +353,10 @@ def main(args):
             positive_score_model2 = positive_score_model2_x
             negative_score_model2 = negative_score_model2_x
 
-            positive_score_model1.requires_grad = False
-            negative_score_model1.requires_grad = False
-            positive_score_model2.requires_grad = False
-            negative_score_model2
+            positive_score_model1.var.detach()
+            negative_score_model1.var.detach()
+            positive_score_model2.var.detach()
+            negative_score_model2.var.detach()
 
             print("lambda", lambda1)
 
