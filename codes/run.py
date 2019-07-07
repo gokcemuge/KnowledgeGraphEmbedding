@@ -337,7 +337,7 @@ def main(args):
 
         # Training Loop
         lambda1 = torch.tensor([np.random.random()], requires_grad=True)
-        #lambda1.cuda()
+        lambda1.cuda()
         optimizer_total = torch.optim.Adam([lambda1], lr=0.0005)
 
 
@@ -347,6 +347,13 @@ def main(args):
             log, positive_score_model1, negative_score_model1 = kge_model.train_step(kge_model, optimizer, train_iterator, args)
             #TODO: log2?
             log2, positive_score_model2, negative_score_model2 = kge_model2.train_step(kge_model2, optimizer2, train_iterator2, args)
+
+            positive_score_model1.cuda()
+            negative_score_model1.cuda()
+            positive_score_model2.cuda()
+            negative_score_model2.cuda()
+
+            
 
             #TRAINING FOR LOSS TOTAL (calculating one score from two models)
             #clear the optimizer
