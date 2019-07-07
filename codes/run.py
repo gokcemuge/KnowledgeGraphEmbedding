@@ -349,6 +349,7 @@ def main(args):
             #TRAINING FOR LOSS TOTAL (calculating one score from two models)
             #clear the optimizer
             optimizer_total.zero_grad()
+            lambda1 = torch.tensor(np.random.random())
             #check lambda's boundaries
            # if(lambda1 > 1):
             #    lambda1 = 1
@@ -367,7 +368,7 @@ def main(args):
 
             optimizer_total_log = {'total loss': loss_total}
 
-            loss_total.backward()
+            loss_total.backward(retain_graph=True)
             optimizer_total.step()
 
 
