@@ -377,7 +377,7 @@ def main(args):
 
             optimizer_total_log = {'total loss': loss_total}
 
-            loss_total.backward()
+            loss_total.backward(retain_graph=True)
             optimizer_total.step()
 
 
