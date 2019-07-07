@@ -337,7 +337,7 @@ def main(args):
 
         # Training Loop
         lambda1 = torch.tensor([np.random.random()], requires_grad=True)
-
+        lambda1.cuda()
         optimizer_total = torch.optim.Adam([lambda1], lr=0.0005)
 
 
@@ -352,10 +352,6 @@ def main(args):
             print("positive_score_model2", positive_score_model2)
 
             print("lambda", lambda1)
-            positive_score_model1.cpu()
-            negative_score_model1.cpu()
-            positive_score_model2.cpu()
-            negative_score_model2.cpu()
 
             #TRAINING FOR LOSS TOTAL (calculating one score from two models)
             #clear the optimizer
@@ -368,13 +364,18 @@ def main(args):
             #if (lambda1 < 0):
             #    lambda1 = 0
             lambda2 = 1 - lambda1
+            lambda2.cuda()
 
-
+            pos_total = 0
+            pos_total.cuda()
             pos_total = lambda1 * positive_score_model1 + lambda2 * positive_score_model2
 
             pos_total = F.logsigmoid(pos_total).squeeze(dim=1)
             pos_total = - pos_total.mean()
-            
+
+            neg_total = 0
+            neg_total.cuda()
+
             neg_total = lambda1 * negative_score_model1 + lambda2 * negative_score_model2
             neg_total = F.logsigmoid(-neg_total).mean(dim=1)
             neg_total = - neg_total.mean()
