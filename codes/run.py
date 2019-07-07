@@ -352,7 +352,7 @@ def main(args):
             negative_score_model1.cuda()
             positive_score_model2.cuda()
             negative_score_model2.cuda()
-            pos_total.cuda()
+
 
 
             #TRAINING FOR LOSS TOTAL (calculating one score from two models)
@@ -366,6 +366,8 @@ def main(args):
             #if (lambda1 < 0):
             #    lambda1 = 0
             lambda2 = 1 - lambda1
+            lambda2.cuda()
+
             pos_total = lambda1 * positive_score_model1 + lambda2 * positive_score_model2
             pos_total = F.logsigmoid(pos_total).squeeze(dim=1)
             pos_total = - pos_total.mean()
