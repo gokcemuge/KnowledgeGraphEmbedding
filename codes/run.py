@@ -344,12 +344,14 @@ def main(args):
 
         for step in range(init_step, args.max_steps):
 
-            log, positive_score_model1, negative_score_model1 = kge_model.train_step(kge_model, optimizer, train_iterator, args)
+            log, positive_score_model1_x, negative_score_model1_x = kge_model.train_step(kge_model, optimizer, train_iterator, args)
             #TODO: log2?
-            log2, positive_score_model2, negative_score_model2 = kge_model2.train_step(kge_model2, optimizer2, train_iterator2, args)
+            log2, positive_score_model2_x, negative_score_model2_x = kge_model2.train_step(kge_model2, optimizer2, train_iterator2, args)
 
-            print("positive_score_model1", positive_score_model1)
-            print("positive_score_model2", positive_score_model2)
+            positive_score_model1 = positive_score_model1_x
+            negative_score_model1 = negative_score_model1_x
+            positive_score_model2 = positive_score_model2_x
+            negative_score_model2 = negative_score_model2_x
 
             print("lambda", lambda1)
 
@@ -366,15 +368,13 @@ def main(args):
             lambda2 = 1 - lambda1
             lambda2.cuda()
 
-            pos_total = 0
-            pos_total.cuda()
+
             pos_total = lambda1 * positive_score_model1 + lambda2 * positive_score_model2
 
             pos_total = F.logsigmoid(pos_total).squeeze(dim=1)
             pos_total = - pos_total.mean()
 
-            neg_total = 0
-            neg_total.cuda()
+
 
             neg_total = lambda1 * negative_score_model1 + lambda2 * negative_score_model2
             neg_total = F.logsigmoid(-neg_total).mean(dim=1)
