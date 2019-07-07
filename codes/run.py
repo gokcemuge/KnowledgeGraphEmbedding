@@ -352,6 +352,10 @@ def main(args):
             print("positive_score_model2", positive_score_model2)
 
             print("lambda", lambda1)
+            positive_score_model1.cpu()
+            negative_score_model1.cpu()
+            positive_score_model2.cpu()
+            negative_score_model2.cpu()
 
             #TRAINING FOR LOSS TOTAL (calculating one score from two models)
             #clear the optimizer
