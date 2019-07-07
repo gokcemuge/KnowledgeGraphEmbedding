@@ -336,7 +336,7 @@ def main(args):
 
         lambda1 = torch.tensor(np.random.random())
         lambda1.cuda()
-        optimizer_total = torch.optim.Adam(filter(lambda p: p.requires_grad, [lambda1], lr=0.0005))
+        optimizer_total = torch.optim.Adam([lambda1], lr=0.0005)
 
         for step in range(init_step, args.max_steps):
 
