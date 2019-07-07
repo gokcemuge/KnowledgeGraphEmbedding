@@ -336,9 +336,11 @@ def main(args):
 
         # Training Loop
 
-        lambda1 = torch.tensor(np.random.random())
-        lambda1.cuda()
-        optimizer_total = torch.optim.Adam([lambda1], lr=0.0005)
+        lambda_n_1 = torch.tensor(np.random.random())
+        lambda_p_1= torch.tensor(np.random.random())
+        lambda_n_1.cuda()
+        lambda_p_1.cuda()
+        optimizer_total = torch.optim.Adam([lambda_n_1, lambda_p_1], lr=0.0005)
 
         for step in range(init_step, args.max_steps):
 
@@ -350,16 +352,24 @@ def main(args):
             #clear the optimizer
             optimizer_total.zero_grad()
             #check lambda's boundaries
-            if(lambda1 > 1):
-                lambda1 = 1
-            if (lambda1 < 0):
-                lambda1 = 0
-            lambda2 = 1 - lambda1
-            pos_total = lambda1 * positive_score_model1 + lambda2 * positive_score_model2
+            if(lambda_n_1 > 1):
+                lambda_n_1 = 1
+            if (lambda_n_1 < 0):
+                lambda_n_1 = 0
+
+            if (lambda_p_1 > 1):
+                lambda_p_1 = 1
+            if (lambda_p_1 < 0):
+                lambda_p_1 = 0
+
+            lambda_n_2 = 1 - lambda_n_1
+            lambda_p_2 = 1 - lambda_p_1
+
+            pos_total = lambda_p_1 * positive_score_model1 + lambda_p_2 * positive_score_model2
             pos_total = F.logsigmoid(pos_total).squeeze(dim=1)
             pos_total = - pos_total.mean()
             
-            neg_total = lambda1 * negative_score_model1 + lambda2 * negative_score_model2
+            neg_total = lambda_n_1 * negative_score_model1 + lambda_n_2 * negative_score_model2
             neg_total = F.logsigmoid(-neg_total).mean(dim=1)
             neg_total = - neg_total.mean()
             
