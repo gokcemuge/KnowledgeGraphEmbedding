@@ -352,8 +352,8 @@ def main(args):
             negative_score_model1.cuda()
             positive_score_model2.cuda()
             negative_score_model2.cuda()
+            pos_total.cuda()
 
-            
 
             #TRAINING FOR LOSS TOTAL (calculating one score from two models)
             #clear the optimizer
