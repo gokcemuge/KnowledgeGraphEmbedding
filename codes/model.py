@@ -420,10 +420,17 @@ class KGEModel(nn.Module):
                         score2 += filter_bias
 
                         #TODO: delete here
-                        print("score 1:", score)
-                        print("score 2:", score2)
+                        #print("score 1:", score)
+                        #print("score 2:", score2)
 
-                        score = score + score2
+                        '''
+                        for transcomplex and rotate and datasetwn18rr
+                        manual alpha values will be tried
+                        
+                        '''
+                        alpha_1 = 0.4
+
+                        score =(alpha_1)* score + (1-alpha_1) * score2
 
                         print("score final:", score)
 
