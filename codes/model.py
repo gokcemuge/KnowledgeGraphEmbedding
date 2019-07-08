@@ -428,7 +428,7 @@ class KGEModel(nn.Module):
                         manual alpha values will be tried
                         
                         '''
-                        alpha_1 = 0.4
+                        alpha_1 = 0.1
 
                         score =(alpha_1)* score + (1-alpha_1) * score2
 
