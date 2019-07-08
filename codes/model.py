@@ -432,7 +432,7 @@ class KGEModel(nn.Module):
 
                         score =(alpha_1)* score + (1-alpha_1) * score2
 
-                        print("score final:", score)
+                        #print("score final:", score)
 
                         #--------- --------- --------- --------- --------- --------- ---------
                         # Explicitly sort all the entities to ensure that there is no test exposure bias
