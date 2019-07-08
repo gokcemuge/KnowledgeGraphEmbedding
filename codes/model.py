@@ -433,8 +433,6 @@ class KGEModel(nn.Module):
                         score = F.normalize(score, p=2, dim=1)
                         score2 = F.normalize(score2, p=2, dim=1)
 
-                        print("score:", score)
-                        print("score2:", score2)
 
                         score = alpha_1* score + (1-alpha_1) * score2
 
