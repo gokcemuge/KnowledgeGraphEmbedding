@@ -430,7 +430,13 @@ class KGEModel(nn.Module):
                         '''
                         alpha_1 = 0.1
 
-                        score =(alpha_1)* score + (1-alpha_1) * score2
+                        score = F.normalize(score, p=2, dim=1)
+                        score2 = F.normalize(score2, p=2, dim=1)
+
+                        print("score:", score)
+                        print("score2:", score2)
+
+                        score = alpha_1* score + (1-alpha_1) * score2
 
                         #print("score final:", score)
 
