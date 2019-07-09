@@ -314,9 +314,12 @@ class KGEModel(nn.Module):
             negative_sample = negative_sample.cuda()
             subsampling_weight = subsampling_weight.cuda()
 
-        negative_score = model((positive_sample, negative_sample), mode=mode, sampling='negative')
+        negative_score = -model((positive_sample, negative_sample), mode=mode, sampling='negative')
 
         selu = nn.SELU()
+
+        if negative_score < 0:
+            negative_score = - negative_score
 
         if args.negative_adversarial_sampling:
             # In self-adversarial sampling, we do not apply back-propagation on the sampling weight
@@ -325,7 +328,7 @@ class KGEModel(nn.Module):
         else:
             negative_score = selu(-negative_score).mean(dim=1)
 
-        positive_score = model(positive_sample, sampling='positive')
+        positive_score = -model(positive_sample, sampling='positive')
 
         positive_score = selu(positive_score).squeeze(dim=1)
 
