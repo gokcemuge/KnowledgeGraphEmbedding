@@ -314,7 +314,7 @@ class KGEModel(nn.Module):
             negative_sample = negative_sample.cuda()
             subsampling_weight = subsampling_weight.cuda()
 
-        negative_score = -model((positive_sample, negative_sample), mode=mode, sampling='negative')
+        negative_score = model((positive_sample, negative_sample), mode=mode, sampling='negative')
 
         selu = nn.SELU()
 
@@ -325,7 +325,7 @@ class KGEModel(nn.Module):
         else:
             negative_score = selu(-negative_score).mean(dim=1)
 
-        positive_score = -model(positive_sample, sampling='positive')
+        positive_score = model(positive_sample, sampling='positive')
 
         positive_score = selu(positive_score).squeeze(dim=1)
 
