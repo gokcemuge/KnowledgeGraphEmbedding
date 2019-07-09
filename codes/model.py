@@ -316,16 +316,18 @@ class KGEModel(nn.Module):
 
         negative_score = -model((positive_sample, negative_sample), mode=mode, sampling='negative')
 
+        selu = nn.SELU()
+
         if args.negative_adversarial_sampling:
             # In self-adversarial sampling, we do not apply back-propagation on the sampling weight
             negative_score = (F.softmax(negative_score * args.adversarial_temperature, dim=1).detach()
-                              * nn.RReLU(-negative_score)).sum(dim=1)
+                              * selu(-negative_score)).sum(dim=1)
         else:
-            negative_score = nn.RReLU(-negative_score).mean(dim=1)
+            negative_score = selu(-negative_score).mean(dim=1)
 
         positive_score = -model(positive_sample, sampling='positive')
 
-        positive_score = nn.RReLU(positive_score).squeeze(dim=1)
+        positive_score = selu(positive_score).squeeze(dim=1)
 
     #TODO: uni weights nedir bak
         if args.uni_weight:
