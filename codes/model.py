@@ -318,8 +318,9 @@ class KGEModel(nn.Module):
 
         selu = nn.SELU()
 
-        if negative_score < 0:
-            negative_score = - negative_score
+        for x in negative_score:
+            if x < 0:
+                x = - x
 
         if args.negative_adversarial_sampling:
             # In self-adversarial sampling, we do not apply back-propagation on the sampling weight
